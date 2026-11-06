@@ -1,0 +1,51 @@
+<?php
+require 'koneksi.php';
+$kategori = mysqli_query(
+ $koneksi,
+ 'SELECT id_kategori, nama_kategori FROM kategori ORDER BY nama_kategori'
+);
+$error = '';
+$nama = trim($_POST['nama_produk'] ?? '');
+$hargaInput = $_POST['harga'] ?? '';
+$stokInput = $_POST['stok'] ?? '';
+$kategoriInput = $_POST['id_kategori'] ?? '';
+if ($_SERVER['REQUEST_METHOD'] === 'POST') {
+ $harga = filter_var($hargaInput, FILTER_VALIDATE_FLOAT);
+ $stok = filter_var($stokInput, FILTER_VALIDATE_INT);
+ $idKategori = filter_var($kategoriInput, FILTER_VALIDATE_INT);
+ if ($nama === '' || $harga === false || $harga <= 0 ||
+ $stok === false || $stok < 0 || $idKategori === false || $idKategori < 1) {
+ $error = 'Isi semua data dengan benar. Harga harus positif dan stok tidak boleh negatif.';
+ } else {
+ $cek = mysqli_prepare($koneksi, 'SELECT COUNT(*) FROM kategori WHERE id_kategori = ?');
+ mysqli_stmt_bind_param($cek, 'i', $idKategori);
+ mysqli_stmt_execute($cek);
+ mysqli_stmt_bind_result($cek, $jumlahKategori);
+ mysqli_stmt_fetch($cek);
+ mysqli_stmt_close($cek);
+ if ((int) $jumlahKategori === 0) {
+ $error = 'Kategori tidak ditemukan.';
+ } else {
+ $sql = 'INSERT INTO produk (id_kategori, nama_produk, harga, stok)
+ VALUES (?, ?, ?, ?)';
+ $stmt = mysqli_prepare($koneksi, $sql);
+ mysqli_stmt_bind_param($stmt, 'isdi', $idKategori, $nama, $harga, $stok);
+ mysqli_stmt_execute($stmt);
+ mysqli_stmt_close($stmt);
+ header('Location: index.php');
+ exit;
+ }
+ }
+}
+?>
+<!doctype html>
+<html lang="id">
+<head><meta charset="utf-8"><title>Tambah Produk</title></head>
+<body>
+<h1>Tambah Produk</h1>
+<?php if ($error !== ''): ?><p><?= e($error) ?></p><?php endif; ?>
+<form method="post">
+ <p>Nama: <input name="nama_produk" value="<?= e($nama) ?>" required></p>
+ <p>Harga: <input name="harga" type="number" min="0.01" step="0.01"
+ value="<?= e($hargaInput) ?>" required></p>
+ <p>Stok: <input name="stok" type="number" min="0" step="1"
