@@ -49,3 +49,21 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
  <p>Harga: <input name="harga" type="number" min="0.01" step="0.01"
  value="<?= e($hargaInput) ?>" required></p>
  <p>Stok: <input name="stok" type="number" min="0" step="1"
+ value="<?= e($stokInput) ?>" required></p>
+ <p>Kategori:
+ <select name="id_kategori" required>
+ <option value="">Pilih kategori</option>
+ <?php while ($item = mysqli_fetch_assoc($kategori)): ?>
+ <?php $terpilih = (string) $kategoriInput === (string) $item['id_kategori']; ?>
+ <option value="<?= e($item['id_kategori']) ?>"
+ <?= $terpilih ? 'selected' : '' ?>>
+ <?= e($item['nama_kategori']) ?>
+ </option>
+ <?php endwhile; ?>
+ </select>
+ </p>
+ <button type="submit">Simpan</button>
+</form>
+<p><a href="index.php">Kembali</a></p>
+</body>
+</html>
